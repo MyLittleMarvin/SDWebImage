@@ -7,6 +7,8 @@
 
 @interface NSData (ImageContentType)
 
++ (BOOL)isImageData:(NSData *)data;
+
 /**
  *  Compute the content type for an image data
  *

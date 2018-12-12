@@ -144,6 +144,19 @@ BOOL ImageDataHasPNGPreffix(NSData *data) {
 
 #pragma mark ImageCache
 
+- (void)storeData:(NSData *)data toDiskForKey:(NSString *)key {
+    if (!data || !key) {
+        return;
+    }
+    dispatch_async(self.ioQueue, ^{
+        if (![_fileManager fileExistsAtPath:_diskCachePath]) {
+            [_fileManager createDirectoryAtPath:_diskCachePath withIntermediateDirectories:YES attributes:nil error:NULL];
+        }
+        
+        [_fileManager createFileAtPath:[self defaultCachePathForKey:key] contents:data attributes:nil];
+    });
+}
+
 - (void)storeImage:(UIImage *)image recalculateFromImage:(BOOL)recalculate imageData:(NSData *)imageData forKey:(NSString *)key toDisk:(BOOL)toDisk {
     if (!image || !key) {
         return;
@@ -209,6 +222,11 @@ BOOL ImageDataHasPNGPreffix(NSData *data) {
     exists = [[NSFileManager defaultManager] fileExistsAtPath:[self defaultCachePathForKey:key]];
     
     return exists;
+}
+
+- (NSString*)diskImagePathWithKey:(NSString*)key
+{
+    return [self defaultCachePathForKey:key];
 }
 
 - (void)diskImageExistsWithKey:(NSString *)key completion:(SDWebImageCheckCacheCompletionBlock)completionBlock {
@@ -284,14 +302,14 @@ BOOL ImageDataHasPNGPreffix(NSData *data) {
     }
 
     if (!key) {
-        doneBlock(nil, SDImageCacheTypeNone);
+        doneBlock(nil, nil, SDImageCacheTypeNone);
         return nil;
     }
 
     // First check the in-memory cache...
     UIImage *image = [self imageFromMemoryCacheForKey:key];
     if (image) {
-        doneBlock(image, SDImageCacheTypeMemory);
+        doneBlock(image, nil, SDImageCacheTypeMemory);
         return nil;
     }
 
@@ -302,14 +320,22 @@ BOOL ImageDataHasPNGPreffix(NSData *data) {
         }
 
         @autoreleasepool {
-            UIImage *diskImage = [self diskImageForKey:key];
+            //UIImage *diskImage = [self diskImageForKey:key];
+            UIImage *diskImage = nil;
+            NSData *data = [self diskImageDataBySearchingAllPathsForKey:key];
+            if (data) {
+                diskImage = [UIImage sd_imageWithData:data];
+                diskImage = [self scaledImageForKey:key image:diskImage];
+                diskImage = [UIImage decodedImageWithImage:diskImage];
+            }
+
             if (diskImage) {
                 CGFloat cost = diskImage.size.height * diskImage.size.width * diskImage.scale * diskImage.scale;
                 [self.memCache setObject:diskImage forKey:key cost:cost];
             }
 
             dispatch_async(dispatch_get_main_queue(), ^{
-                doneBlock(diskImage, SDImageCacheTypeDisk);
+                doneBlock(diskImage, data, SDImageCacheTypeDisk);
             });
         }
     });

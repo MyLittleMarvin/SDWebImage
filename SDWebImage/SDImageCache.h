@@ -24,7 +24,7 @@ typedef NS_ENUM(NSInteger, SDImageCacheType) {
     SDImageCacheTypeMemory
 };
 
-typedef void(^SDWebImageQueryCompletedBlock)(UIImage *image, SDImageCacheType cacheType);
+typedef void(^SDWebImageQueryCompletedBlock)(UIImage *image, NSData *data, SDImageCacheType cacheType);
 
 typedef void(^SDWebImageCheckCacheCompletionBlock)(BOOL isInCache);
 
@@ -102,6 +102,13 @@ typedef void(^SDWebImageCalculateSizeBlock)(NSUInteger fileCount, NSUInteger tot
  * @param toDisk      Store the image to disk cache if YES
  */
 - (void)storeImage:(UIImage *)image recalculateFromImage:(BOOL)recalculate imageData:(NSData *)imageData forKey:(NSString *)key toDisk:(BOOL)toDisk;
+
+/**
+ * Store image data to disk at the given key.
+ * @param image data to store
+ * @param key The unique image cache key, usually it's image absolute URL
+ */
+- (void)storeData:(NSData *)data toDiskForKey:(NSString *)key;
 
 /**
  * Query the disk cache asynchronously.
@@ -220,6 +227,11 @@ typedef void(^SDWebImageCalculateSizeBlock)(NSUInteger fileCount, NSUInteger tot
 - (BOOL)diskImageExistsWithKey:(NSString *)key;
 
 /**
+ * Get the cache path for key
+ */
+- (NSString*)diskImagePathWithKey:(NSString*)key;
+
+/*
  *  Get the cache path for a certain key (needs the cache path root folder)
  *
  *  @param key  the key (can be obtained from url using cacheKeyForURL)

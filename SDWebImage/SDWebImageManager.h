@@ -84,9 +84,9 @@ typedef NS_OPTIONS(NSUInteger, SDWebImageOptions) {
     SDWebImageTransformAnimatedImage = 1 << 10,
 };
 
-typedef void(^SDWebImageCompletionBlock)(UIImage *image, NSError *error, SDImageCacheType cacheType, NSURL *imageURL);
+typedef void(^SDWebImageCompletionBlock)(UIImage *image, NSData* data, NSError *error, SDImageCacheType cacheType, NSURL *imageURL);
 
-typedef void(^SDWebImageCompletionWithFinishedBlock)(UIImage *image, NSError *error, SDImageCacheType cacheType, BOOL finished, NSURL *imageURL);
+typedef void(^SDWebImageCompletionWithFinishedBlock)(UIImage *image, NSData* data, NSError *error, SDImageCacheType cacheType, BOOL finished, NSURL *imageURL);
 
 typedef NSString *(^SDWebImageCacheKeyFilterBlock)(NSURL *url);
 
@@ -175,6 +175,7 @@ SDWebImageManager *manager = [SDWebImageManager sharedManager];
  */
 + (SDWebImageManager *)sharedManager;
 
+
 /**
  * Downloads the image at the given URL if not present in cache or return the cached version otherwise.
  *
@@ -239,6 +240,18 @@ SDWebImageManager *manager = [SDWebImageManager sharedManager];
  *  @return if the image was already cached (disk only)
  */
 - (BOOL)diskImageExistsForURL:(NSURL *)url;
+
+/**
+ * Get cache path for image with url
+ */
+- (NSString*)diskImagePathForURL:(NSURL*)url;
+
+@end
+
+@interface SDWebImageManager (Decode)
+
++ (BOOL)isDecodeGIFImage;
++ (void)setIsDecodeGIFImage:(BOOL)isDecode;
 
 /**
  *  Async check if image has already been cached
